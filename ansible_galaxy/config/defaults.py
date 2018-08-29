@@ -1,5 +1,6 @@
 import os
 
+
 def get_config_path():
     paths = [
         'mazer.yml',
@@ -10,6 +11,7 @@ def get_config_path():
         if os.path.exists(os.path.expanduser(path)):
             return path
     return paths[1]
+
 
 # a list of tuples that is fed to an OrderedDict
 DEFAULTS = [
