@@ -90,11 +90,12 @@ class GalaxyCLI(cli.CLI):
         elif self.action == "init":
             self.parser.set_usage("usage: %prog init [options] role_name")
             self.parser.add_option('--init-path', dest='init_path', default="./",
-                                   help='The path in which the skeleton role will be created. The default is the current working directory.')
-            self.parser.add_option('--type', dest='role_type', action='store', default='default',
-                                   help="Initialize using an alternate role type. Valid types include: 'default' and 'apb'.")
-            self.parser.add_option('--role-skeleton', dest='role_skeleton', default=None,
-                                   help='The path to a role skeleton that the new role should be based upon.')
+                                   help='The path in which the artifact will be created. The default is the current working directory.')
+            self.parser.add_option('--type', dest='artifact_type', action='store', default='collection',
+                                   choices=['apb', 'collection', 'role'],
+                                   help="Initialize using an alternate artifact type. Valid types include: 'apb', 'collection' and 'role'.")
+            self.parser.add_option('--skeleton', '--role-skeleton', dest='skeleton', default=None,
+                                   help='The path to a skeleton that the new artifact should be based upon.')
 
         elif self.action == "install":
             self.parser.set_usage("usage: %prog install [options] [-r FILE | repo_name(s)[,version] | scm+repo_url[,version] | tar_file(s)]")
@@ -234,41 +235,41 @@ class GalaxyCLI(cli.CLI):
 
         init_path = self.options.init_path
         force = self.options.force
-        role_skeleton_path = self.options.role_skeleton
+        skeleton_path = self.options.skeleton
 
-        role_name = self.args.pop(0).strip() if self.args else None
-        if not role_name:
-            raise cli_exceptions.CliOptionsError("- no role name specified for init")
+        artifact_name = self.args.pop(0).strip() if self.args else None
+        if not artifact_name:
+            raise cli_exceptions.CliOptionsError("- no artifact name specified for init")
 
-        role_path = os.path.join(init_path, role_name)
-        if os.path.exists(role_path):
-            if os.path.isfile(role_path):
-                raise cli_exceptions.GalaxyCliError("- the path %s already exists, but is a file - aborting" % role_path)
+        artifact_path = os.path.join(init_path, artifact_name)
+        if os.path.exists(artifact_path):
+            if os.path.isfile(artifact_path):
+                raise cli_exceptions.GalaxyCliError("- the path %s already exists, but is a file - aborting" % artifact_path)
             elif not force:
                 raise cli_exceptions.GalaxyCliError("- the directory %s already exists."
                                                     "you can use --force to re-initialize this directory,\n"
                                                     "however it will reset any main.yml files that may have\n"
-                                                    "been modified there already." % role_path)
+                                                    "been modified there already." % artifact_path)
 
-        if role_skeleton_path is not None:
-            skeleton_ignore_expressions = self.config.options['role_skeleton_ignore']
+        if skeleton_path is not None:
+            skeleton_ignore_expressions = self.config.options['skeleton_ignore']
         else:
             this_dir, this_filename = os.path.split(__file__)
 
-            type_path = getattr(self.options, 'role_type', "default")
-            role_skeleton_path = os.path.join(this_dir, '../', 'data/role_skeleton', type_path)
+            type_path = getattr(self.options, 'artifact_type', "default")
+            skeleton_path = os.path.join(this_dir, '../', 'data/skeleton', type_path)
 
-            self.log.debug('role_skeleton_path: %s', role_skeleton_path)
+            self.log.debug('skeleton_path: %s', skeleton_path)
 
             skeleton_ignore_expressions = ['^.*/.git_keep$']
 
-        return init.init(role_name,
+        return init.init(artifact_name,
                          init_path,
-                         role_path,
+                         artifact_path,
                          force,
-                         role_skeleton_path,
+                         skeleton_path,
                          skeleton_ignore_expressions,
-                         self.options.role_type,
+                         self.options.artifact_type,
                          display_callback=self.display)
 
     def execute_info(self):
