@@ -1,3 +1,4 @@
+NAME=mazer
 PYTHON=python
 RPMSPECDIR= packaging/rpm
 RPMSPEC = $(RPMSPECDIR)/mazer.spec
