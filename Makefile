@@ -1,11 +1,52 @@
+PYTHON=python
+RPMSPECDIR= packaging/rpm
+RPMSPEC = $(RPMSPECDIR)/mazer.spec
+RPMDIST = $(shell rpm --eval '%{?dist}')
+#RPMVERSION = $(shell date +"%Y%M%dT%H%M%S")
+RPMVERSION = "0.3.0"
+VERSION = "0.3.0"
+RPMRELEASE = 1
+RPMNVR = "$(NAME)-$(RPMVERSION)-$(RPMRELEASE)$(RPMDIST)$(REPOTAG)"
+
 RST_DOCS_DIR=docs/rst
 
-.PHONY: clean clean-test clean-pyc clean-build docs help \
+.PHONY: clean clean-test clean-pyc clean-build clean-rpm docs help \
 	dev/bumpversion-path dev/bumpversion-minor dev/bumpversion-major
 .DEFAULT_GOAL := help
 
+.PHONY: sdist
+sdist:
+	$(PYTHON) setup.py sdist
 
-clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
+.PHONY: rpmcommon
+rpmcommon: sdist
+	@mkdir -p rpm-build
+	@cp dist/*.gz rpm-build/
+	@cp $(RPMSPEC) rpm-build/$(NAME).spec
+
+.PHONY: rpm
+rpm: rpmcommon
+	@rpmbuild --define "_topdir %(pwd)/rpm-build" \
+	--define "_builddir %{_topdir}" \
+	--define "_rpmdir %{_topdir}" \
+	--define "_srcrpmdir %{_topdir}" \
+	--define "_specdir $(RPMSPECDIR)" \
+	--define "_sourcedir %{_topdir}" \
+	--define "_rpmfilename $(RPMNVR).%%{ARCH}.rpm" \
+	--define "__python `which $(PYTHON)`" \
+	--define "upstream_version $(VERSION)" \
+	--define "rpmversion $(RPMVERSION)" \
+	--define "rpmrelease $(RPMRELEASE)" \
+	$(EXTRA_RPM_DEFINES) \
+	-ba rpm-build/$(NAME).spec
+	@rm -f rpm-build/$(NAME).spec
+	@echo "#############################################"
+	@echo "Mazer RPM is built:"
+	@echo "    rpm-build/$(RPMNVR).noarch.rpm"
+	@echo "#############################################"
+
+
+clean: clean-build clean-pyc clean-test clean-rpm ## remove all build, test, coverage and Python artifacts
 
 clean-build: ## remove build artifacts
 	rm -fr build/
@@ -19,6 +60,9 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
+
+clean-rpm: ## remove rpm build artifacts
+	rm -rf rpm-build
 
 clean-test: ## remove test and coverage artifacts
 	rm -fr .tox/
@@ -66,3 +110,4 @@ dev/dist: clean ## builds source and wheel package
 
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
+

@@ -30,18 +30,18 @@ entry_points = {
 }
 
 setup(
+    name='mazer',
     entry_points=entry_points,
     install_requires=requirements,
     license="GPLv3",
     long_description=readme + '\n\n' + changelog,
     include_package_data=True,
     keywords='mazer',
-    packages=find_packages(include=['ansible_galaxy', 'ansible_galaxy_cli',
-                                    'ansible_galaxy.*', 'ansible_galaxy_cli.*']),
-    setup_requires=setup_requirements,
+    packages=find_packages(),
+    #setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://github.com/ansible/galaxy-cli',
+    url='https://github.com/ansible/mazer',
     version='0.3.0',
     zip_safe=False,
 )
